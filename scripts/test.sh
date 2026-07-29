@@ -23,4 +23,8 @@ if [[ -d "$FRAMEWORKS/Testing.framework" ]]; then
 	ARGS+=(-Xlinker -rpath -Xlinker "$INTEROP")
 fi
 
-exec swift test "${ARGS[@]}" "$@"
+# ${ARGS[@]+...} rather than a plain "${ARGS[@]}": macOS ships bash 3.2, where
+# expanding an empty array under `set -u` is an unbound variable error. ARGS is
+# empty whenever Testing.framework is not where the Command Line Tools put it,
+# which is the case on a runner with full Xcode.
+exec swift test ${ARGS[@]+"${ARGS[@]}"} "$@"
