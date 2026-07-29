@@ -9,9 +9,32 @@ the flags it passes are shown in the UI.
 
 ## Requirements
 
-macOS 13 or later on Apple silicon, and the Swift toolchain from the Xcode
-Command Line Tools (`xcode-select --install`). Full Xcode is not required.
-Intel Macs are not supported - the app is built for arm64 only.
+macOS 13 or later on Apple silicon. Intel Macs are not supported - the app is
+built for arm64 only.
+
+Building from source also needs the Swift toolchain from the Xcode Command Line
+Tools (`xcode-select --install`). Full Xcode is not required.
+
+## Install
+
+```sh
+brew install --cask vojtechmares/tap/caffeinum
+```
+
+The cask lives in
+[vojtechmares/homebrew-tap](https://github.com/vojtechmares/homebrew-tap) and
+every release updates it. Published builds are ad-hoc signed but not notarised,
+so the cask clears the `com.apple.quarantine` flag on the installed app -
+Gatekeeper would otherwise refuse to launch a bundle it cannot verify.
+
+The zip attached to each
+[release](https://github.com/vojtechmares/caffeinum/releases) works too: unzip
+it and move `Caffeinum.app` into `~/Applications`. That copy keeps its
+quarantine flag, so the first launch needs the usual right-click → Open, or:
+
+```sh
+xattr -dr com.apple.quarantine ~/Applications/Caffeinum.app
+```
 
 ## Build and install
 
@@ -117,8 +140,9 @@ scripts/build-app.sh          SwiftPM build, bundle assembly, icon, ad-hoc sign
 scripts/make-icon.swift       renders AppIcon.icns
 scripts/test.sh               swift test, pointed at the toolchain's Testing.framework
 scripts/release.sh            next version from svu, then tag and push
+scripts/bump-cask.sh          rewrites the Homebrew cask for a published release
 .github/workflows/ci.yml      build and test on every push, pull request and tag
-.github/workflows/release.yml builds and publishes the release a v* tag on main asks for
+.github/workflows/release.yml publishes the release a v* tag on main asks for, then bumps the cask
 ```
 
 `make test` writes PNG renders of the menu panel; set `CAFFEINUM_RENDER_DIR` to
