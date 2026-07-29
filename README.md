@@ -26,6 +26,7 @@ make run         # build and launch from dist/
 make universal   # arm64 + x86_64 bundle
 make test        # run the test suite
 make uninstall   # quit and remove from ~/Applications
+make release     # tag the next version - GitHub builds and publishes it
 make clean
 ```
 
@@ -115,6 +116,9 @@ Tests/CaffeinumTests/         unit tests plus offscreen renders of the panel
 scripts/build-app.sh          SwiftPM build, bundle assembly, icon, ad-hoc sign
 scripts/make-icon.swift       renders AppIcon.icns
 scripts/test.sh               swift test, pointed at the toolchain's Testing.framework
+scripts/release.sh            next version from svu, then tag and push
+.github/workflows/ci.yml      build and test on every push, pull request and tag
+.github/workflows/release.yml builds and publishes the release a v* tag on main asks for
 ```
 
 `make test` writes PNG renders of the menu panel; set `CAFFEINUM_RENDER_DIR` to

@@ -1,7 +1,7 @@
 APP := dist/Caffeinum.app
 INSTALL_DIR := $(HOME)/Applications
 
-.PHONY: build universal test run install uninstall clean
+.PHONY: build universal test run install uninstall release clean
 
 build: ## Build dist/Caffeinum.app for this Mac
 	@./scripts/build-app.sh
@@ -28,6 +28,9 @@ uninstall: ## Quit and remove the installed app
 	@pkill -x Caffeinum 2>/dev/null || true
 	@rm -rf $(INSTALL_DIR)/Caffeinum.app
 	@echo "Removed $(INSTALL_DIR)/Caffeinum.app"
+
+release: ## Tag the next version and push it - GitHub builds and publishes it
+	@./scripts/release.sh $(ARGS)
 
 clean: ## Remove build products
 	@rm -rf .build dist

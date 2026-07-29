@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-test:
+    name: Build and test
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      CAFFEINUM_RENDER_DIR: ${{ github.workspace }}/dist/renders
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Test
+        run: make test
+
+      - name: Build universal app bundle
+        run: make universal
+
+      - name: Verify the bundle
+        run: |
+          set -euo pipefail
+          APP=dist/Caffeinum.app
+          test -x "$APP/Contents/MacOS/Caffeinum"
+          lipo -archs "$APP/Contents/MacOS/Caffeinum"
+          plutil -lint "$APP/Contents/Info.plist"
+          codesign --verify --verbose "$APP"
+
+      - name: Package the app
+        run: |
+          set -euo pipefail
+          ditto -c -k --sequesterRsrc --keepParent \
+            dist/Caffeinum.app "dist/Caffeinum-${GITHUB_SHA::7}.zip"
+
+      - name: Upload the app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Caffeinum-${{ github.sha }}
+          path: dist/*.zip
+          if-no-files-found: error
+
+      - name: Upload the menu panel renders
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: renders-${{ github.sha }}
+          path: dist/renders/*.png
+          if-no-files-found: warn

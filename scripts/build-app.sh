@@ -5,6 +5,7 @@
 #   ./scripts/build-app.sh              release build for this Mac's architecture
 #   CONFIGURATION=debug ./scripts/build-app.sh
 #   UNIVERSAL=1 ./scripts/build-app.sh  arm64 + x86_64
+#   VERSION=1.2.3 ./scripts/build-app.sh  stamp the bundle with a version
 #
 set -euo pipefail
 
@@ -32,6 +33,19 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/$APP_NAME"
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
+
+# The checked-in Info.plist carries a placeholder version; released builds are
+# stamped with the tag they were built from. BUILD_NUMBER wants to be something
+# that only ever goes up - the release workflow passes the commit count.
+if [[ -n "${VERSION:-}" ]]; then
+	SHORT_VERSION="${VERSION#v}"
+	BUILD_NUMBER="${BUILD_NUMBER:-${SHORT_VERSION%%-*}}"
+	echo "==> Stamping version $SHORT_VERSION ($BUILD_NUMBER)"
+	/usr/libexec/PlistBuddy \
+		-c "Set :CFBundleShortVersionString $SHORT_VERSION" \
+		-c "Set :CFBundleVersion $BUILD_NUMBER" \
+		"$APP/Contents/Info.plist" >/dev/null
+fi
 
 echo "==> Rendering icon"
 ICONSET="$DIST/AppIcon.iconset"
