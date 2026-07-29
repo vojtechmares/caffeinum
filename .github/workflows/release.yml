@@ -125,6 +125,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
           SHA256: ${{ steps.package.outputs.sha256 }}
         run: |
           set -euo pipefail
@@ -132,17 +133,66 @@ jobs:
             -f tag_name="$TAG" \
             -f target_commitish="$GITHUB_SHA" \
             --jq .body > dist/notes.md
+
+          REPO_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          ZIP_URL="$REPO_URL/releases/download/$TAG/Caffeinum-$VERSION-arm64.zip"
+          # vojtechmares/homebrew-tap is vojtechmares/tap to brew.
+          TAP="${TAP_REPO/\/homebrew-/\/}"
+
           cat >> dist/notes.md <<EOF
 
           ## Install
 
-          Download \`Caffeinum-$VERSION-arm64.zip\`, unzip it and move
-          \`Caffeinum.app\` into \`~/Applications\`. Apple silicon only. The bundle
-          is ad-hoc signed but not notarised, so the first launch needs
-          right-click → Open.
+          Apple silicon, macOS 13 or later.
+
+          ### Homebrew (recommended)
+
+          \`\`\`sh
+          brew install --cask $TAP/caffeinum
+          \`\`\`
+
+          The cask clears the \`com.apple.quarantine\` flag for you - see
+          [Install]($REPO_URL#install) in the README.
+          EOF
+
+          # The cask job is skipped for prereleases, so the tap still points at
+          # the last stable version - say so rather than let brew look broken.
+          if [[ "$PRERELEASE" == "true" ]]; then
+            cat >> dist/notes.md <<EOF
+
+          This is a prerelease and the tap only carries stable releases, so brew
+          installs $VERSION only once it ships. Until then, use the download
+          below.
+          EOF
+          fi
+
+          cat >> dist/notes.md <<EOF
+
+          ### Download
+
+          [Caffeinum-$VERSION-arm64.zip]($ZIP_URL) - unzip it and move
+          \`Caffeinum.app\` into \`~/Applications\`. The bundle is ad-hoc signed
+          but not notarised, so the first launch needs right-click → Open, or
+          clear the flag yourself:
+
+          \`\`\`sh
+          xattr -dr com.apple.quarantine ~/Applications/Caffeinum.app
+          \`\`\`
 
           \`\`\`
           $SHA256  Caffeinum-$VERSION-arm64.zip
+          \`\`\`
+
+          ### From source
+
+          Needs the Swift toolchain from the Xcode Command Line Tools
+          (\`xcode-select --install\`); full Xcode is not required.
+
+          \`\`\`sh
+          git clone $REPO_URL.git
+          cd caffeinum
+          git checkout $TAG
+          make install
           \`\`\`
           EOF
 
