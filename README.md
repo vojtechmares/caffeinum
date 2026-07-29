@@ -9,8 +9,9 @@ the flags it passes are shown in the UI.
 
 ## Requirements
 
-macOS 13 or later, and the Swift toolchain from the Xcode Command Line Tools
-(`xcode-select --install`). Full Xcode is not required.
+macOS 13 or later on Apple silicon, and the Swift toolchain from the Xcode
+Command Line Tools (`xcode-select --install`). Full Xcode is not required.
+Intel Macs are not supported - the app is built for arm64 only.
 
 ## Build and install
 
@@ -23,7 +24,6 @@ Other targets:
 ```sh
 make build       # build dist/Caffeinum.app
 make run         # build and launch from dist/
-make universal   # arm64 + x86_64 bundle
 make test        # run the test suite
 make uninstall   # quit and remove from ~/Applications
 make release     # tag the next version - GitHub builds and publishes it

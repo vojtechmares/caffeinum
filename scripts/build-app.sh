@@ -2,9 +2,8 @@
 #
 # Builds Caffeinum.app. No Xcode required - SwiftPM plus a hand-assembled bundle.
 #
-#   ./scripts/build-app.sh              release build for this Mac's architecture
+#   ./scripts/build-app.sh                release build, arm64
 #   CONFIGURATION=debug ./scripts/build-app.sh
-#   UNIVERSAL=1 ./scripts/build-app.sh  arm64 + x86_64
 #   VERSION=1.2.3 ./scripts/build-app.sh  stamp the bundle with a version
 #
 set -euo pipefail
@@ -17,12 +16,11 @@ CONFIGURATION="${CONFIGURATION:-release}"
 DIST="$ROOT/dist"
 APP="$DIST/$APP_NAME.app"
 
-BUILD_ARGS=(--configuration "$CONFIGURATION")
-if [[ "${UNIVERSAL:-0}" == "1" ]]; then
-	BUILD_ARGS+=(--arch arm64 --arch x86_64)
-fi
+# Apple silicon only. Asking for the arch explicitly keeps the bundle the same
+# whichever Mac it is built on.
+BUILD_ARGS=(--configuration "$CONFIGURATION" --arch arm64)
 
-echo "==> Building ($CONFIGURATION)"
+echo "==> Building ($CONFIGURATION, arm64)"
 swift build "${BUILD_ARGS[@]}"
 BINARY="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)/$APP_NAME"
 

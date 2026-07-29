@@ -1,13 +1,10 @@
 APP := dist/Caffeinum.app
 INSTALL_DIR := $(HOME)/Applications
 
-.PHONY: build universal test run install uninstall release clean
+.PHONY: build test run install uninstall release clean
 
-build: ## Build dist/Caffeinum.app for this Mac
+build: ## Build dist/Caffeinum.app (arm64)
 	@./scripts/build-app.sh
-
-universal: ## Build a universal (arm64 + x86_64) bundle
-	@UNIVERSAL=1 ./scripts/build-app.sh
 
 test: ## Run the test suite
 	@./scripts/test.sh

@@ -33,15 +33,18 @@ jobs:
       - name: Test
         run: make test
 
-      - name: Build universal app bundle
-        run: make universal
+      - name: Build the app bundle
+        run: make build
 
       - name: Verify the bundle
         run: |
           set -euo pipefail
           APP=dist/Caffeinum.app
           test -x "$APP/Contents/MacOS/Caffeinum"
-          lipo -archs "$APP/Contents/MacOS/Caffeinum"
+          ARCHS="$(lipo -archs "$APP/Contents/MacOS/Caffeinum")"
+          echo "architectures: $ARCHS"
+          [[ "$ARCHS" == "arm64" ]] || {
+            echo "::error::expected an arm64 binary, got $ARCHS"; exit 1; }
           plutil -lint "$APP/Contents/Info.plist"
           codesign --verify --verbose "$APP"
 

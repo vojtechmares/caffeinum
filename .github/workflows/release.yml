@@ -78,11 +78,10 @@ jobs:
       - name: Test
         run: make test
 
-      - name: Build universal app bundle
+      - name: Build the app bundle
         env:
           VERSION: ${{ steps.version.outputs.version }}
           BUILD_NUMBER: ${{ steps.version.outputs.build }}
-          UNIVERSAL: "1"
         run: ./scripts/build-app.sh
 
       - name: Verify the bundle
@@ -93,8 +92,8 @@ jobs:
           APP=dist/Caffeinum.app
           ARCHS="$(lipo -archs "$APP/Contents/MacOS/Caffeinum")"
           echo "architectures: $ARCHS"
-          [[ "$ARCHS" == *arm64* && "$ARCHS" == *x86_64* ]] || {
-            echo "::error::the bundle is not universal"; exit 1; }
+          [[ "$ARCHS" == "arm64" ]] || {
+            echo "::error::expected an arm64 binary, got $ARCHS"; exit 1; }
           plutil -lint "$APP/Contents/Info.plist"
           codesign --verify --verbose "$APP"
           STAMPED="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
@@ -107,7 +106,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          ZIP="dist/Caffeinum-$VERSION-universal.zip"
+          ZIP="dist/Caffeinum-$VERSION-arm64.zip"
           ditto -c -k --sequesterRsrc --keepParent dist/Caffeinum.app "$ZIP"
           (cd dist && shasum -a 256 "$(basename "$ZIP")" > "$(basename "$ZIP").sha256")
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
@@ -129,12 +128,13 @@ jobs:
 
           ## Install
 
-          Download \`Caffeinum-$VERSION-universal.zip\`, unzip it and move
-          \`Caffeinum.app\` into \`~/Applications\`. The bundle is ad-hoc signed but
-          not notarised, so the first launch needs right-click → Open.
+          Download \`Caffeinum-$VERSION-arm64.zip\`, unzip it and move
+          \`Caffeinum.app\` into \`~/Applications\`. Apple silicon only. The bundle
+          is ad-hoc signed but not notarised, so the first launch needs
+          right-click → Open.
 
           \`\`\`
-          $SHA256  Caffeinum-$VERSION-universal.zip
+          $SHA256  Caffeinum-$VERSION-arm64.zip
           \`\`\`
           EOF
 
