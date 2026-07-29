@@ -1,5 +1,7 @@
 # Caffeinum
 
+![Caffeinum - keep your agents awake](docs/assets/caffeinum-retro-cover.png)
+
 A menu bar app for macOS that keeps your Mac awake and sets the daily wake/sleep
 schedule. It does nothing else.
 
