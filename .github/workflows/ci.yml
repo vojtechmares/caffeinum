@@ -17,13 +17,13 @@ concurrency:
 jobs:
   build-test:
     name: Build and test
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     env:
       CAFFEINUM_RENDER_DIR: ${{ github.workspace }}/dist/renders
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Show toolchain
         run: |
@@ -52,7 +52,7 @@ jobs:
             dist/Caffeinum.app "dist/Caffeinum-${GITHUB_SHA::7}.zip"
 
       - name: Upload the app
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Caffeinum-${{ github.sha }}
           path: dist/*.zip
@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload the menu panel renders
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: renders-${{ github.sha }}
           path: dist/renders/*.png
