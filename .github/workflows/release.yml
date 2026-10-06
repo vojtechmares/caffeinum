@@ -43,10 +43,16 @@ jobs:
   release:
     name: Build and publish
     needs: guard
-    runs-on: macos-26
+    # Xcode 27 ships the macOS 27 SDK, which is what opts the app into the
+    # macOS 27 behaviour. It is only on the xcode-27 image (public preview) for
+    # now; DEVELOPER_DIR pins the exact Xcode so a new image default cannot
+    # silently change the SDK the app links against.
+    runs-on: xcode-27
     timeout-minutes: 15
     permissions:
       contents: write
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.0.app
     outputs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
@@ -102,6 +108,11 @@ jobs:
           echo "architectures: $ARCHS"
           [[ "$ARCHS" == "arm64" ]] || {
             echo "::error::expected an arm64 binary, got $ARCHS"; exit 1; }
+          SDK="$(otool -l "$APP/Contents/MacOS/Caffeinum" |
+            awk '/LC_BUILD_VERSION/ { found = 1 } found && $1 == "sdk" { print $2; exit }')"
+          echo "linked against SDK: $SDK"
+          [[ "${SDK%%.*}" -ge 27 ]] || {
+            echo "::error::expected the macOS 27 SDK or later, got $SDK"; exit 1; }
           plutil -lint "$APP/Contents/Info.plist"
           codesign --verify --verbose "$APP"
           STAMPED="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
