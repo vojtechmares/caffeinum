@@ -20,6 +20,14 @@ APP="$DIST/$APP_NAME.app"
 # whichever Mac it is built on.
 BUILD_ARGS=(--configuration "$CONFIGURATION" --arch arm64)
 
+# The swiftbuild engine (the SwiftPM default since Swift 6.4) links through
+# clang with --sysroot and without SDKROOT, so clang never reads the SDK's
+# version and the binary records the deployment target (13.0) as its SDK. macOS
+# would then treat the app as built for macOS 13 and hold back newer behaviour.
+# Handing the link step -isysroot makes clang read the real SDK version.
+BUILD_ARGS+=(-Xswiftc -Xclang-linker -Xswiftc -isysroot
+	-Xswiftc -Xclang-linker -Xswiftc "$(xcrun --show-sdk-path)")
+
 echo "==> Building ($CONFIGURATION, arm64)"
 swift build "${BUILD_ARGS[@]}"
 BINARY="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)/$APP_NAME"
